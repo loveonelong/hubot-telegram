@@ -178,6 +178,10 @@ class Telegram extends Adapter
 
     message = update.message || update.edited_message || update.callback_query
     @robot.logger.info "Receiving message_id: " + message.message_id
+    if (@robot.brain.get("handled#{message.message_id}") === true)
+      @robot.logger.warning("Message #{message.message_id} already handled.");
+      return
+    @robot.brain.set("handled#{message.message_id}", true);
 
     # Text event
     if (message.text)
