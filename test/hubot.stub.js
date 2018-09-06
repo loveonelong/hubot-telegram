@@ -3,17 +3,17 @@
 // in our tests
 
 // Function that does/return nothing
-var void_func = function () {
-};
+var voidFunc = function () {
+}
 
 module.exports = {
-  name: "TestBot",
-  alias: "TestAliasBot",
+  name: 'TestBot',
+  alias: 'TestAliasBot',
   logger: {
-    info: void_func,
-    warning: void_func,
-    error: void_func,
-    debug: void_func
+    info: voidFunc,
+    warning: voidFunc,
+    error: voidFunc,
+    debug: voidFunc
   },
   brain: {}
 }
