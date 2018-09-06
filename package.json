@@ -31,7 +31,6 @@
   },
   "devDependencies": {
     "hubot": "*",
-    "coffee-script": "*",
     "mocha": "*"
   }
 }
