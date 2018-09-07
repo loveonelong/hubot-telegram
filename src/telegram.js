@@ -1,10 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS101: Remove unnecessary use of Array.from
- * DS102: Remove unnecessary code created because of implicit returns
- * DS207: Consider shorter variations of null checks
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const { TextMessage, EnterMessage, LeaveMessage, TopicMessage, CatchAllMessage } = require('hubot')
 const Adapter = require.main.require('hubot/src/adapter')
 
@@ -23,7 +16,7 @@ class TelegrambotAdapter extends Adapter {
     // Get the bot information
     this.api.invoke('getMe', {}, (err, result) => {
       if (err) {
-        return this.emit('error', err)
+        this.emit('error', err)
       } else {
         this.bot_id = result.id
         this.bot_username = result.username
@@ -32,7 +25,7 @@ class TelegrambotAdapter extends Adapter {
 
         if (this.bot_username !== this.robot.name) {
           this.robot.logger.warning(`It is advised to use the same bot name as your Telegram Bot: ${this.bot_username}`)
-          return this.robot.logger.warning('Having a different bot name can result in an inconsistent experience when using @mentions')
+          this.robot.logger.warning('Having a different bot name can result in an inconsistent experience when using @mentions')
         }
       }
     })
@@ -60,7 +53,6 @@ class TelegrambotAdapter extends Adapter {
     } else {
       text = text.trim()
     }
-
     return text
   }
 
@@ -144,18 +136,16 @@ class TelegrambotAdapter extends Adapter {
       if (chunks.length !== 0) {
         const current = chunks.shift()
         opts.text = current
-
-        return this.api.invoke('sendMessage', opts, (err, message) => {
+        this.api.invoke('sendMessage', opts, (err, message) => {
           // Forward the callback to the original handler
           cb.apply(this, [err, message])
-
-          return send(cb)
+          send(cb)
         })
       }
     }
 
     // Start the recursive chunking cycle
-    return send(cb)
+    send(cb)
   }
 
   /**
@@ -164,12 +154,11 @@ class TelegrambotAdapter extends Adapter {
   send (envelope, ...strings) {
     const text = strings.join()
     const data = this.applyExtraOptions({ chat_id: envelope.room, text }, envelope.telegram)
-
-    return this.apiSend(data, (err, message) => {
+    this.apiSend(data, (err, message) => {
       if (err) {
-        return this.emit('error', err)
+        this.emit('error', err)
       } else {
-        return this.robot.logger.info(`Sending message to room: ${envelope.room}`)
+        this.robot.logger.info(`Sending message to room: ${envelope.room}`)
       }
     })
   }
@@ -187,11 +176,11 @@ class TelegrambotAdapter extends Adapter {
       reply_to_message_id: envelope.message.id
     }, envelope.telegram)
 
-    return this.apiSend(data, (err, message) => {
+    this.apiSend(data, (err, message) => {
       if (err) {
-        return self.emit('error', err)
+        self.emit('error', err)
       } else {
-        return self.robot.logger.info(`Reply message to room/message: ${envelope.room}/${envelope.message.id}`)
+        self.robot.logger.info(`Reply message to room/message: ${envelope.room}/${envelope.message.id}`)
       }
     })
   }
@@ -219,7 +208,7 @@ class TelegrambotAdapter extends Adapter {
       this.robot.logger.debug(`Received message: ${message.from.username} said '${text}'`)
 
       user = this.createUser(message.from, message.chat)
-      return this.receive(new TextMessage(user, text, message.message_id))
+      this.receive(new TextMessage(user, text, message.message_id))
       // Callback query
     } else if (message.data) {
       text = this.cleanMessageText(message.data, message.message.chat.id)
@@ -230,86 +219,84 @@ class TelegrambotAdapter extends Adapter {
 
       this.api.invoke('answerCallbackQuery', { callback_query_id: message.id }, function (err, result) {
         if (err) {
-          return this.emit('error', err)
+          this.emit('error', err)
         }
       })
 
-      return this.receive(new TextMessage(user, text, message.message.message_id))
+      this.receive(new TextMessage(user, text, message.message.message_id))
 
       // Join event
     } else if (message.new_chat_member) {
       user = this.createUser(message.new_chat_member, message.chat)
       this.robot.logger.info(`User ${user.id} joined chat ${message.chat.id}`)
-      return this.receive(new EnterMessage(user, null, message.message_id))
+      this.receive(new EnterMessage(user, null, message.message_id))
 
       // Exit event
     } else if (message.left_chat_member) {
       user = this.createUser(message.left_chat_member, message.chat)
       this.robot.logger.info(`User ${user.id} left chat ${message.chat.id}`)
-      return this.receive(new LeaveMessage(user, null, message.message_id))
+      this.receive(new LeaveMessage(user, null, message.message_id))
 
       // Chat topic event
     } else if (message.new_chat_title) {
       user = this.createUser(message.from, message.chat)
       this.robot.logger.info(`User ${user.id} changed chat ${message.chat.id} title: ${message.new_chat_title}`)
-      return this.receive(new TopicMessage(user, message.new_chat_title, message.message_id))
+      this.receive(new TopicMessage(user, message.new_chat_title, message.message_id))
     } else {
       message.user = this.createUser(message.from, message.chat)
-      return this.receive(new CatchAllMessage(message))
+      this.receive(new CatchAllMessage(message))
     }
   }
-
+  getUpdate () {
+    setTimeout(() =>
+      this.api.invoke('getUpdates', { offset: this.getLastOffset(), limit: 10 }, (err, result) => {
+        if (err) {
+          this.emit('error', err)
+        } else {
+          if (result.length) { this.offset = result[result.length - 1].update_id }
+          Array.from(result).map(msg => this.handleUpdate(msg))
+        }
+        this.getUpdate()
+      })
+    , this.interval)
+  }
   run () {
-    const self = this
-
     if (!this.token) {
       this.emit('error', new Error('The environment variable "TELEGRAM_TOKEN" is required.'))
     }
 
     // Listen for Telegram API invokes from other scripts
-    this.robot.on('telegram:invoke', (method, opts, cb) => self.api.invoke(method, opts, cb))
+    this.robot.on('telegram:invoke', (method, opts, cb) => this.api.invoke(method, opts, cb))
 
     if (this.webhook) {
       const endpoint = this.webhook + '/' + this.token
       this.robot.logger.debug(`Listening on ${endpoint}`)
 
-      this.api.invoke('setWebHook', { url: endpoint }, function (err, result) {
+      this.api.invoke('setWebHook', { url: endpoint }, (err, result) => {
         if (err) {
-          return self.emit('error', err)
+          this.emit('error', err)
         }
       })
 
       this.robot.router.post(`/${this.token}`, (req, res) => {
         if (req.body.message) {
-          self.handleUpdate(req.body)
+          this.handleUpdate(req.body)
         }
 
-        return res.send('OK')
+        res.send('OK')
       })
     } else {
       // Clear Webhook
-      this.api.invoke('setWebHook', { url: '' }, function (err, result) {
+      this.api.invoke('setWebHook', { url: '' }, (err, result) => {
         if (err) {
-          return self.emit('error', err)
+          this.emit('error', err)
         }
       })
-
-      setInterval(() =>
-        self.api.invoke('getUpdates', { offset: self.getLastOffset(), limit: 10 }, function (err, result) {
-          if (err) {
-            return self.emit('error', err)
-          } else {
-            if (result.length) { self.offset = result[result.length - 1].update_id }
-
-            return Array.from(result).map((msg) =>
-              self.handleUpdate(msg))
-          }
-        })
-      , this.interval)
+      this.getUpdate()
     }
 
     this.robot.logger.info('Telegram Adapter Started...')
-    return this.emit('connected')
+    this.emit('connected')
   }
 }
 
