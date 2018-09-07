@@ -5,18 +5,19 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const { Adapter, TextMessage, EnterMessage, LeaveMessage, TopicMessage, CatchAllMessage } = require('hubot')
+const { TextMessage, EnterMessage, LeaveMessage, TopicMessage, CatchAllMessage } = require('hubot')
+const Adapter = require.main.require('hubot/src/adapter')
+
 const Telegrambot = require('telegrambot')
 
 class TelegrambotAdapter extends Adapter {
   constructor () {
     super(...arguments)
-    this.token = process.env['TELEGRAM_TOKEN']
+    this.token = process.env['TELEGRAM_TOKEN'] || 'testid'
     this.webhook = process.env['TELEGRAM_WEBHOOK']
     this.interval = process.env['TELEGRAM_INTERVAL'] || 2000
     this.offset = 0
     this.api = new Telegrambot(this.token)
-
     this.robot.logger.info(`Telegram Adapter Bot ${this.token} Loaded...`)
 
     // Get the bot information
@@ -219,7 +220,7 @@ class TelegrambotAdapter extends Adapter {
 
       user = this.createUser(message.from, message.chat)
       return this.receive(new TextMessage(user, text, message.message_id))
-    // Callback query
+      // Callback query
     } else if (message.data) {
       text = this.cleanMessageText(message.data, message.message.chat.id)
 
@@ -235,19 +236,19 @@ class TelegrambotAdapter extends Adapter {
 
       return this.receive(new TextMessage(user, text, message.message.message_id))
 
-    // Join event
+      // Join event
     } else if (message.new_chat_member) {
       user = this.createUser(message.new_chat_member, message.chat)
       this.robot.logger.info(`User ${user.id} joined chat ${message.chat.id}`)
       return this.receive(new EnterMessage(user, null, message.message_id))
 
-    // Exit event
+      // Exit event
     } else if (message.left_chat_member) {
       user = this.createUser(message.left_chat_member, message.chat)
       this.robot.logger.info(`User ${user.id} left chat ${message.chat.id}`)
       return this.receive(new LeaveMessage(user, null, message.message_id))
 
-    // Chat topic event
+      // Chat topic event
     } else if (message.new_chat_title) {
       user = this.createUser(message.from, message.chat)
       this.robot.logger.info(`User ${user.id} changed chat ${message.chat.id} title: ${message.new_chat_title}`)
@@ -304,7 +305,6 @@ class TelegrambotAdapter extends Adapter {
               self.handleUpdate(msg))
           }
         })
-
       , this.interval)
     }
 

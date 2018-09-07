@@ -5,7 +5,7 @@
   "main": "./src/telegram",
   "scripts": {
     "eslint": "eslint .eslintrc.js ./ --ignore-path .eslintignore --fix",
-    "test": "node_modules\\.bin\\mocha --compilers coffee:coffee-script/register"
+    "test": "node_modules\\.bin\\mocha test/telegram.test.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
   },
   "homepage": "https://github.com/lukefx/hubot-telegram",
   "dependencies": {
+    "debug": "^3.1.0",
     "telegrambot": "^0.1.1"
   },
   "devDependencies": {

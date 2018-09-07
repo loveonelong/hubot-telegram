@@ -1,37 +1,37 @@
-var hubot = require('./hubot.stub')
-var telegram = require('./../src/telegram').use(hubot)
-var assert = require('assert')
+const hubot = require('./hubot.stub')
+const assert = require('assert')
 
+let telegram = require('./../src/telegram').use(hubot)
 describe('Telegram', function () {
   describe('#cleanMessageText()', function () {
     it('private chat: should remove any leading / characters from commands', function () {
-      var input = '/ship it'
-      var text = telegram.cleanMessageText(input, 1)
-      assert.equal(/\/ship it/.test(text), false)
+      let input_1 = '/ship it'
+      let text_1 = telegram.cleanMessageText(input_1, 1)
+      assert.equal(/\/ship it/.test(text_1), false)
 
-      var input = '/ship it'
-      var text = telegram.cleanMessageText(input, 1)
-      assert.notEqual(text.split(' ')[1].substr(0, 1), '/')
+      let input_2 = '/ship it'
+      let text_2 = telegram.cleanMessageText(input_2, 1)
+      assert.notEqual(text_2.split(' ')[1].substr(0, 1), '/')
     })
 
     // eg. ship it => BotName ship it
     it('private chat: should auto prepend the bot name to message text', function () {
-      var input = 'ship it'
-      var text = telegram.cleanMessageText(input, 1)
+      let input = 'ship it'
+      let text = telegram.cleanMessageText(input, 1)
       assert.equal(hubot.name + ' ' + input, text)
     })
 
     // eg. BotName ship it => BotName ship it
     it('private chat: should not prepend bot name if has already been provided', function () {
-      var input = 'ship it'
-      var text = telegram.cleanMessageText(hubot.name + ' ' + input, 1)
-      assert.equal(hubot.name + ' ' + input, text)
+      let input = 'ship it'
+      let text_1 = telegram.cleanMessageText(hubot.name + ' ' + input, 1)
+      assert.equal(hubot.name + ' ' + input, text_1)
 
-      var text = telegram.cleanMessageText(hubot.name.toLowerCase() + ' ' + input, 1)
-      assert.equal(hubot.name + ' ' + input, text)
+      let text_2 = telegram.cleanMessageText(hubot.name.toLowerCase() + ' ' + input, 1)
+      assert.equal(hubot.name + ' ' + input, text_2)
 
-      var text = telegram.cleanMessageText('@' + hubot.name.toLowerCase() + ' ' + input, 1)
-      assert.equal(hubot.name + ' ' + input, text)
+      let text_3 = telegram.cleanMessageText('@' + hubot.name.toLowerCase() + ' ' + input, 1)
+      assert.equal(hubot.name + ' ' + input, text_3)
     })
 
     // eg. BotAliasName ship it => BotAliasName ship it
