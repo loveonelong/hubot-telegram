@@ -1,3 +1,5 @@
+> This repo has been moved here. [https://github.com/loveonelong/hubot-telegram-better](https://github.com/loveonelong/hubot-telegram-better)
+
 # Hubot Telegram Adapter
 
 [![Build Status](https://travis-ci.org/lukefx/hubot-telegram.svg?branch=feature-issue-5)](https://travis-ci.org/lukefx/hubot-telegram)
